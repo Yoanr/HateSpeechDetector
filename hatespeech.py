@@ -41,9 +41,8 @@ def classify_tweet(le, vectorizer, tweet, clf):
     tweet_to_clf = processTweet(tweet)
     tweet_to_clf = vectorizer.transform([tweet_to_clf])
     label = clf.predict(tweet_to_clf)[0]
-    print(label)
     confidence = max(clf.predict_proba(tweet_to_clf)[0])*100
-    return 'The model says: ' + lab[label] + ' with ' + str(round(confidence, 2)) + '% confidence.'
+    return 'hateSpeech says: ' + lab[label] + ' with ' + str(round(confidence, 2)) + '% confidence.'
 
 def perform(inputText):
     hate_speech = pd.read_csv('./twitter-hate-speech-classifier-DFE-a845520.csv',
@@ -90,6 +89,6 @@ def perform(inputText):
     clf_rfc.score(X_test, y_test)
 
 
-    pickle.dump(clf_rfc, open('classifiernew.pkl', 'wb'),protocol = 4)
+    #pickle.dump(clf_rfc, open('classifiernew.pkl', 'wb'),protocol = 4)
 
     print(classify_tweet(le, vectorizer, inputText, clf_rfc))

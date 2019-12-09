@@ -1,37 +1,18 @@
 import matplotlib.pyplot as plt
-import sys
-import warnings
 import json
-import hatespeech
 
-def main():
-    warnings.filterwarnings("ignore")
-    inputText = input("Type what you want: ")
-    print(inputText)
 
-    hatesonar(inputText)
-    hatespeech.perform(inputText)
-
-def hatesonar(inputText):
+def perform(inputText):
     from hatesonar import Sonar
     sonar = Sonar()
     sonarResult = sonar.ping(text=inputText)
-    print(sonarResult)
 
     hatespeech = sonarResult['classes'][0]['confidence']*100
     offensivespeech = sonarResult['classes'][1]['confidence']*100
     toxicspeech = hatespeech+offensivespeech
     neitherspeech = sonarResult['classes'][2]['confidence']*100
 
-    print("\n")
-    print("(hate speech: ", hatespeech)
-    print("offensive speech: ",offensivespeech, ")")
-
-    print("\n")
-    print("toxic: ", toxicspeech)
-    print("neither: ", neitherspeech)
-
-
+    '''
     # Pie chart, where the slices will be ordered and plotted counter-clockwise:
     labels = 'Toxic', 'Neutral'
     sizes = [toxicspeech, neitherspeech]
@@ -42,8 +23,17 @@ def hatesonar(inputText):
     ax1.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%',
             shadow=True, startangle=90)
     ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-
     plt.show()
+    '''
 
-if __name__ == "__main__":
-    main()
+    lab = ["The tweet contains hate speech","The tweet is not offensive","The tweet uses offensive language "]
+    if(neitherspeech > 50):
+            label = 1
+            confidence = neitherspeech
+    elif (offensivespeech > 50):
+            label = 2
+            confidence = offensivespeech
+    else:
+            label = 0
+            confidence = hatespeech
+    print('hateSonar says: ' + lab[label] + ' with ' + str(round(confidence, 2)) + '% confidence.')
