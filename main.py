@@ -7,7 +7,8 @@ def main():
     inputText = input("Type what you want: ")
 
     hateSonar.perform(inputText)
-    hatespeech.perform(inputText)
+    #hatespeech.dump(inputText)
+    hatespeech.performFast(inputText)
 
 
 if __name__ == "__main__":

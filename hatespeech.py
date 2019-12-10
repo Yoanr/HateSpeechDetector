@@ -15,6 +15,30 @@ import pickle
 import numpy as np
 import pandas as pd
 import warnings
+import os
+import dill
+import pickle
+import argparse
+
+
+
+def convert(old_pkl):
+    """
+    Convert a Python 2 pickle to Python 3
+    """
+    # Make a name for the new pickle
+    new_pkl = os.path.splitext(os.path.basename(old_pkl))[0]+"_p3.pkl"
+
+    # Convert Python 2 "ObjectType" to Python 3 object
+    dill._dill._reverse_typemap["ObjectType"] = object
+
+    # Open the pickle using latin1 encoding
+    with open(old_pkl, "rb") as f:
+        loaded = pickle.load(f, encoding="latin1")
+
+    # Re-save as Python 3 pickle
+    with open(new_pkl, "wb") as outfile:
+        pickle.dump(loaded, outfile)
 
 
 def processTweet(tweet):
@@ -36,7 +60,7 @@ def processTweet(tweet):
 
     return tweet
 
-def classify_tweet(le, vectorizer, tweet, clf):
+def classify_tweet(vectorizer, tweet, clf):
     lab = ["The tweet contains hate speech","The tweet is not offensive","The tweet uses offensive language but not hate speech"]
     tweet_to_clf = processTweet(tweet)
     tweet_to_clf = vectorizer.transform([tweet_to_clf])
@@ -44,7 +68,7 @@ def classify_tweet(le, vectorizer, tweet, clf):
     confidence = max(clf.predict_proba(tweet_to_clf)[0])*100
     return 'hateSpeech says: ' + lab[label] + ' with ' + str(round(confidence, 2)) + '% confidence.'
 
-def perform(inputText):
+def dump(inputText):
     hate_speech = pd.read_csv('./twitter-hate-speech-classifier-DFE-a845520.csv',
                             encoding='iso-8859-1')
     #print('There are', len(hate_speech), 'data points.')
@@ -88,7 +112,35 @@ def perform(inputText):
     clf_rfc.fit(X_train, y_train)
     clf_rfc.score(X_test, y_test)
 
+    pickle.dump(clf_rfc, open('pkl_objects/classifier.pkl', 'wb'), protocol= 4)
+    convert('pkl_objects/classifier.pkl')
 
-    #pickle.dump(clf_rfc, open('classifiernew.pkl', 'wb'),protocol = 4)
+    #print(classify_tweet(vectorizer, inputText, clf_rfc))
 
-    print(classify_tweet(le, vectorizer, inputText, clf_rfc))
+
+def performFast(inputText):
+
+    hate_speech = pd.read_csv('./twitter-hate-speech-classifier-DFE-a845520.csv',
+                              encoding='iso-8859-1')
+    #print('There are', len(hate_speech), 'data points.')
+    hate_speech_subset = hate_speech.iloc[:, [19, 5, 6]]
+    hate_speech_subset.columns = ['Tweets', 'Verdict', 'Confidence']
+
+    le = preprocessing.LabelEncoder()
+    le.fit(list(hate_speech_subset.Verdict.unique()))
+    hate_speech_subset['Numeric_Verdict'] = le.transform(
+        list(hate_speech_subset.Verdict.values))
+    hate_speech_subset['Tweets'] = hate_speech_subset['Tweets'].map(
+        lambda x: processTweet(x))
+
+    text = hate_speech_subset['Tweets'].values
+    vectorizer = CountVectorizer(ngram_range=(1, 2))
+    vectorizer.fit(text)
+    CUR_DIR = os.path.dirname(__file__)
+    CLF = pickle.load(open(
+        os.path.join(CUR_DIR,
+                     'pkl_objects',
+                     'classifier_p3.pkl'), 'rb'))
+    print(classify_tweet(vectorizer, inputText, CLF))
+
+
