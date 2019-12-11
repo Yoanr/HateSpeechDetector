@@ -60,13 +60,6 @@ def processTweet(tweet):
 
     return tweet
 
-def classify_tweet(vectorizer, tweet, clf):
-    lab = ["The tweet contains hate speech","The tweet is not offensive","The tweet uses offensive language but not hate speech"]
-    tweet_to_clf = processTweet(tweet)
-    tweet_to_clf = vectorizer.transform([tweet_to_clf])
-    label = clf.predict(tweet_to_clf)[0]
-    confidence = max(clf.predict_proba(tweet_to_clf)[0])*100
-    return 'hateSpeech says: ' + lab[label] + ' with ' + str(round(confidence, 2)) + '% confidence.'
 
 def dump(inputText):
     hate_speech = pd.read_csv('./twitter-hate-speech-classifier-DFE-a845520.csv',
@@ -141,6 +134,16 @@ def performFast(inputText):
         os.path.join(CUR_DIR,
                      'pkl_objects',
                      'classifier_p3.pkl'), 'rb'))
-    print(classify_tweet(vectorizer, inputText, CLF))
+
+                     
+    lab = ["contains hate speech", "is not offensive",
+           "uses offensive language but not hate speech"]
+    tweet_to_clf = processTweet(inputText)
+    tweet_to_clf = vectorizer.transform([tweet_to_clf])
+    label = CLF.predict(tweet_to_clf)[0]
+    confidence = max(CLF.predict_proba(tweet_to_clf)[0])*100
+
+    print("The Msg : ", inputText,lab[label], " with ", str(round(confidence, 2)) + "% confidence.")
+
 
 
