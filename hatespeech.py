@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 from sklearn.model_selection import learning_curve, GridSearchCV
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
@@ -16,10 +17,12 @@ import numpy as np
 import pandas as pd
 import warnings
 import os
-import dill
 import pickle
 import argparse
+import dill
 
+from mlxtend.evaluate import confusion_matrix
+from mlxtend.plotting import plot_confusion_matrix
 
 
 def convert(old_pkl):
@@ -61,10 +64,10 @@ def processTweet(tweet):
     return tweet
 
 
-def dump(inputText):
+def dump():
     hate_speech = pd.read_csv('./twitter-hate-speech-classifier-DFE-a845520.csv',
                             encoding='iso-8859-1')
-    #print('There are', len(hate_speech), 'data points.')
+    print('There are', len(hate_speech), 'data points.')
     hate_speech_subset = hate_speech.iloc[:, [19, 5, 6]]
     hate_speech_subset.columns = ['Tweets', 'Verdict', 'Confidence']
 
@@ -83,7 +86,18 @@ def dump(inputText):
     X = vectorizer.transform(text)
     y = hate_speech_subset['Numeric_Verdict'].values
     X_train, X_test, y_train, y_test = train_test_split(X, y)
-    #print(X.shape)
+
+
+    cm = confusion_matrix(y_train,
+                      SVC(kernel='linear', probability=True).fit(X_train, y_train).predict(X_train))
+    fig, ax = plot_confusion_matrix(conf_mat=cm)
+    plt.show()
+
+    #0 : The tweet contains hate speech
+    #1 : The tweet is not offensive
+    #2 : The tweet uses offensive language but not hate speech
+
+    print(X.shape)
 
     """
     param_grid = {"max_depth": [3, None],
@@ -103,12 +117,11 @@ def dump(inputText):
     """
     clf_rfc = RandomForestClassifier()
     clf_rfc.fit(X_train, y_train)
-    clf_rfc.score(X_test, y_test)
+    score = clf_rfc.score(X_test, y_test)
+    print(score)
 
     pickle.dump(clf_rfc, open('pkl_objects/classifier.pkl', 'wb'), protocol= 4)
     convert('pkl_objects/classifier.pkl')
-
-    #print(classify_tweet(vectorizer, inputText, clf_rfc))
 
 
 def performFast(inputText):
@@ -144,6 +157,7 @@ def performFast(inputText):
     confidence = max(CLF.predict_proba(tweet_to_clf)[0])*100
 
     print("The Msg : ", inputText,lab[label], " with ", str(round(confidence, 2)) + "% confidence.")
+    return label
 
 
 

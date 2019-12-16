@@ -4,7 +4,6 @@ import sys
 import random
 import warnings
 import hatespeech
-import hateSonar
 import datetime
 
 class Calculate(Thread):
@@ -34,8 +33,6 @@ if __name__ == "__main__":
         if(message == ""):
             break
 
-    #hatespeech.dump(inputText)
-    #hateSonar.perform(inputText)
     for thread in threads:
             thread.join()
 
